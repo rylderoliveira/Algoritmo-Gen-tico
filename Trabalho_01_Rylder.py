@@ -1,7 +1,6 @@
 import numpy as np
 import random as rd
 import matplotlib.pyplot as plt
-import time
 
 # Declaração das constantes
 UB = 3
@@ -44,26 +43,25 @@ def xreal(pop, ub, lb):
         x_real.append(r)
     return x_real
 
-# Retorna os pontos em fx
+# Retorna os pontos em fx e a nota de cada um dos valores
 def fitness(x_real):
-    fitness = []
-    for i in x_real:
-        fitness.append(f(i))
-    return fitness
+    fx = [f(i) for i in x_real]
+    ordenada = sorted(fx, reverse=False)
+    fit = [fx.index(i) for i in ordenada]
+    return ordenada, fit
 
 # Calcula a area percentual da roleta para cada individuo da população
 def percentual(fx):
-    total = sum(fx)
+    total = sum(fx) 
     percentuais = []
     for elemento in fx:
-        percentuais.append(round(elemento/total, 3))
+        percentuais.append(elemento/total)
     return percentuais
 
 # Aplica o metodo de seleção por roleta
 def roullete(valor_percentual):
     soma_cumulativa = np.cumsum(valor_percentual)
     selecionados = []
-    indexs = []
     for i in range(len(valor_percentual)):
         aleatorio = rd.random()
         for index, elemento in enumerate(soma_cumulativa):
@@ -93,18 +91,17 @@ def crossover(selecionados):
 
 # Começo do SGA
 pop = create(NPOP, NBITS)
-grafico = plt.subplot(111)
 x = np.linspace(LB,UB)
-grafico.plot(x,f(x),'--')
+plt.plot(x,f(x),'--')
 for i in range(NGEN):
     valor_x = xreal(pop,UB,LB)
-    fx = fitness(valor_x)
+    fx, fit = fitness(valor_x)
     print(fx)
-    grafico.plot(valor_x, fx, '+')
+    print(fit)
     percentual_fx = percentual(fx)
+    print(percentual_fx)
     selecionados = roullete(percentual_fx)
     filhos = crossover(selecionados)
     pop = filhos
+    plt.plot(valor_x, fx, '+')
     plt.pause(0.5)
-    time.sleep(0.1)
-    
