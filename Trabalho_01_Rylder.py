@@ -19,7 +19,8 @@ def create(npop, nbits):
         bits= []
         for _ in range(nbits):
             bit = rd.random()
-            if bit >= 0.5:
+            # Esse if faz com que eu tenha um vetor aleatorio contendo apenas 0 e 1
+            if bit >= 0.5: 
                 bit =1
             else:
                 bit = 0
@@ -27,7 +28,7 @@ def create(npop, nbits):
         pop.append(bits)
     return pop
 
-# Transforma o array de bits em real 
+# Transforma o vetor de bits em real 
 def xreal(pop, ub, lb):
     x_real = []
     for bits in pop: 
@@ -45,9 +46,14 @@ def xreal(pop, ub, lb):
 
 # Retorna os pontos em fx e a nota de cada um dos valores
 def fitness(x_real):
-    fx = [f(i) for i in x_real]
-    ordenada = sorted(fx, reverse=False)
-    fit = [fx.index(i) for i in ordenada]
+    fx = [f(i) for i in x_real] # Retorna os pontos de x em fx
+    temp_fx = fx # Criando lista temporario para calculo das notas
+    ordenada = sorted(fx, reverse=False) # Ordena os valores para escolha da nota
+    fit = []
+    for i in ordenada:
+        index = temp_fx.index(i)
+        fit.append(index) # Cria um lista com as notas de fx
+        temp_fx[index] = None # Essa linha foi necessaria para que não houvesse notas repetidas em caso de valor de fx iguais
     return ordenada, fit
 
 # Calcula a area percentual da roleta para cada individuo da população
@@ -96,8 +102,6 @@ plt.plot(x,f(x),'--')
 for i in range(NGEN):
     valor_x = xreal(pop,UB,LB)
     fx, fit = fitness(valor_x)
-    print(fx)
-    print(fit)
     percentual_fx = percentual(fx)
     print(percentual_fx)
     selecionados = roullete(percentual_fx)
