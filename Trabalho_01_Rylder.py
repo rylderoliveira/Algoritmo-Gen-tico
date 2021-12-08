@@ -44,31 +44,24 @@ def xreal(pop, ub, lb):
         x_real.append(r)
     return x_real
 
-# Retorna os pontos em fx e a nota de cada um dos valores
+# Retorna a nota de cada um dos valores
 def fitness(x_real):
     fx = [f(i) for i in x_real] # Retorna os pontos de x em fx
-    temp_fx = fx # Criando lista temporario para calculo das notas
-    ordenada = sorted(fx, reverse=False) # Ordena os valores para escolha da nota
+    temp_fx = fx.copy() # Criando lista temporario para calculo das notas
+    ordenada = sorted(temp_fx, reverse=False) # Ordena os valores para escolha da nota
     fit = []
     for i in ordenada:
         index = temp_fx.index(i)
-        fit.append(index) # Cria um lista com as notas de fx
+        fit.append(index+1) # Cria um lista com as notas de fx
         temp_fx[index] = None # Essa linha foi necessaria para que não houvesse notas repetidas em caso de valor de fx iguais
-    return ordenada, fit
-
-# Calcula a area percentual da roleta para cada individuo da população
-def percentual(fx):
-    total = sum(fx) 
-    percentuais = []
-    for elemento in fx:
-        percentuais.append(elemento/total)
-    return percentuais
+    return fx, fit
 
 # Aplica o metodo de seleção por roleta
-def roullete(valor_percentual):
-    soma_cumulativa = np.cumsum(valor_percentual)
+def roullete(fit):
+    total = sum(fit)
+    soma_cumulativa = np.cumsum(fit)/total # Calcula a area de cada valor na roleta
     selecionados = []
-    for i in range(len(valor_percentual)):
+    for i in range(len(fit)):
         aleatorio = rd.random()
         for index, elemento in enumerate(soma_cumulativa):
             if aleatorio <= elemento:
@@ -77,13 +70,13 @@ def roullete(valor_percentual):
     return selecionados # Aqui ele retorna o index do vetor B selecionado
 
 # Essa função faz o cruzamento entre os individuos e cria uma nova população
-def crossover(selecionados):
+def crossover(selecionados, pop):
     bits_selecionados = [pop[i] for i in selecionados] # Pegando o bits selecionados anteriormente
     mates = np.random.permutation(len(bits_selecionados)) # Achando os pares a serem cruzados
-    crossover_site = rd.randrange(1,NBITS)
     new_pop = []
     # Esse primeiro for escolhe os pais para cruzamento
     for i in range(0,len(mates), 2):
+        crossover_site = rd.randrange(1,NBITS)
         bit_pai_1 = bits_selecionados[mates[i]]
         bit_pai_2 = bits_selecionados[mates[i+1]]
         # Esse segundo for faz o cruzamento dos pais trocando os bits afrente do corte
@@ -97,15 +90,17 @@ def crossover(selecionados):
 
 # Começo do SGA
 pop = create(NPOP, NBITS)
+plt.ion()
 x = np.linspace(LB,UB)
-plt.plot(x,f(x),'--')
 for i in range(NGEN):
+    plt.clf()
     valor_x = xreal(pop,UB,LB)
     fx, fit = fitness(valor_x)
-    percentual_fx = percentual(fx)
-    print(percentual_fx)
-    selecionados = roullete(percentual_fx)
-    filhos = crossover(selecionados)
-    pop = filhos
+    plt.plot(x,f(x), '--')
     plt.plot(valor_x, fx, '+')
+    print(fx)
+    selecionados = roullete(fit)
+    filhos = crossover(selecionados, pop)
+    pop = filhos
     plt.pause(0.5)
+plt.ioff()
