@@ -48,12 +48,12 @@ def xreal(pop, ub, lb):
 def fitness(x_real):
     fx = [f(i) for i in x_real] # Retorna os pontos de x em fx
     temp_fx = fx.copy() # Criando lista temporario para calculo das notas
-    ordenada = sorted(temp_fx, reverse=False) # Ordena os valores para escolha da nota
+    ordenada = sorted(temp_fx, reverse=True) # Ordena os valores para escolha da nota
     fit = []
-    for i in ordenada:
-        index = temp_fx.index(i)
+    for i, valor in enumerate(fx):
+        index = ordenada.index(valor)
         fit.append(index+1) # Cria um lista com as notas de fx
-        temp_fx[index] = None # Essa linha foi necessaria para que não houvesse notas repetidas em caso de valor de fx iguais
+        ordenada[index] = None # Essa linha foi necessaria para que não houvesse notas repetidas em caso de valor de fx iguais
     return fx, fit
 
 # Aplica o metodo de seleção por roleta
@@ -101,6 +101,6 @@ for i in range(NGEN):
     print(fx)
     selecionados = roullete(fit)
     filhos = crossover(selecionados, pop)
-    pop = filhos
+    pop = filhos.copy()
     plt.pause(0.5)
 plt.ioff()
