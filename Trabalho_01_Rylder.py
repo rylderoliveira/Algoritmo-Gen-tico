@@ -34,7 +34,7 @@ def xreal(pop, ub, lb):
     for bits in pop: 
         z = 0
         d = (ub - lb)/(2**len(bits)-1)
-        bits.reverse()
+        #bits.reverse()
         i = -1
         for item in bits:
             i += 1
@@ -50,7 +50,7 @@ def fitness(x_real):
     temp_fx = fx.copy() # Criando lista temporario para calculo das notas
     ordenada = sorted(temp_fx, reverse=True) # Ordena os valores para escolha da nota
     fit = []
-    for i, valor in enumerate(fx):
+    for _, valor in enumerate(fx):
         index = ordenada.index(valor)
         fit.append(index+1) # Cria um lista com as notas de fx
         ordenada[index] = None # Essa linha foi necessaria para que não houvesse notas repetidas em caso de valor de fx iguais
@@ -60,8 +60,9 @@ def fitness(x_real):
 def roullete(fit):
     total = sum(fit)
     soma_cumulativa = np.cumsum(fit)/total # Calcula a area de cada valor na roleta
+    print(soma_cumulativa)
     selecionados = []
-    for i in range(len(fit)):
+    for _ in range(len(fit)):
         aleatorio = rd.random()
         for index, elemento in enumerate(soma_cumulativa):
             if aleatorio <= elemento:
@@ -77,8 +78,8 @@ def crossover(selecionados, pop):
     # Esse primeiro for escolhe os pais para cruzamento
     for i in range(0,len(mates), 2):
         crossover_site = rd.randrange(1,NBITS)
-        bit_pai_1 = bits_selecionados[mates[i]]
-        bit_pai_2 = bits_selecionados[mates[i+1]]
+        bit_pai_1 = bits_selecionados[mates[i]].copy()
+        bit_pai_2 = bits_selecionados[mates[i+1]].copy()
         # Esse segundo for faz o cruzamento dos pais trocando os bits afrente do corte
         for j in range(crossover_site, len(bit_pai_1), 1):
             bit_pai_1[j], bit_pai_2[j] = bit_pai_2[j], bit_pai_1[j]
@@ -96,6 +97,7 @@ for i in range(NGEN):
     plt.clf()
     valor_x = xreal(pop,UB,LB)
     fx, fit = fitness(valor_x)
+    print(fit)
     plt.plot(x,f(x), '--')
     plt.plot(valor_x, fx, '+')
     print(fx)
