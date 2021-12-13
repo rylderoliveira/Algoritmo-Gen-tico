@@ -60,7 +60,6 @@ def fitness(x_real):
 def roullete(fit):
     total = sum(fit)
     soma_cumulativa = np.cumsum(fit)/total # Calcula a area de cada valor na roleta
-    print(soma_cumulativa)
     selecionados = []
     for _ in range(len(fit)):
         aleatorio = rd.random()
@@ -89,6 +88,15 @@ def crossover(selecionados, pop):
 
     return new_pop
 
+def FindBest(pop):
+    x = xreal(pop,UB,LB)
+    fx, _ = fitness(x)
+    fx_best = min(fx)
+    index = fx.index(fx_best)
+    x_best = x[index]
+    
+    return x_best, fx_best
+
 # Começo do SGA
 pop = create(NPOP, NBITS)
 plt.ion()
@@ -97,12 +105,11 @@ for i in range(NGEN):
     plt.clf()
     valor_x = xreal(pop,UB,LB)
     fx, fit = fitness(valor_x)
-    print(fit)
     plt.plot(x,f(x), '--')
     plt.plot(valor_x, fx, '+')
-    print(fx)
     selecionados = roullete(fit)
     filhos = crossover(selecionados, pop)
     pop = filhos.copy()
     plt.pause(0.5)
 plt.ioff()
+print(FindBest(pop))
