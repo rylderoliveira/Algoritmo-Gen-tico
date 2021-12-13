@@ -20,7 +20,7 @@ def create(npop, nbits):
         for _ in range(nbits):
             bit = rd.random()
             # Esse if faz com que eu tenha um vetor aleatorio contendo apenas 0 e 1
-            if bit >= 0.5: 
+            if bit >= 0.5:
                 bit =1
             else:
                 bit = 0
@@ -28,10 +28,10 @@ def create(npop, nbits):
         pop.append(bits)
     return pop
 
-# Transforma o vetor de bits em real 
+# Transforma o vetor de bits em real
 def xreal(pop, ub, lb):
     x_real = []
-    for bits in pop: 
+    for bits in pop:
         z = 0
         d = (ub - lb)/(2**len(bits)-1)
         #bits.reverse()
@@ -88,14 +88,28 @@ def crossover(selecionados, pop):
 
     return new_pop
 
-def FindBest(pop):
+# Encontra o melhor local
+def findBest(pop):
     x = xreal(pop,UB,LB)
     fx, _ = fitness(x)
     fx_best = min(fx)
     index = fx.index(fx_best)
     x_best = x[index]
-    
     return x_best, fx_best
+
+# Faz o elitismo
+def elite(pop, best_old):
+    x = xreal(pop,UB,LB)
+    fx, _ = fitness(x)
+    best = min(fx)
+    index = fx.index(best)
+    bit_best = pop[index]
+    if best_old < best:
+        sub = rd.randint(0,len(fx)-1)
+        pop[sub] = bit_best # Coloca o melhor individuo em algum lugar aleatorio da população
+    else:
+        best_old = best
+    return pop
 
 # Começo do SGA
 pop = create(NPOP, NBITS)
@@ -103,6 +117,14 @@ plt.ion()
 x = np.linspace(LB,UB)
 for i in range(NGEN):
     plt.clf()
+    # Encontra o melhor local na primeira geração para comparar com as proximas
+    if i == 0:
+        tempx = xreal(pop,UB,LB)
+        fx, _ = fitness(tempx)
+        best_old = min(fx)
+    # Faz o elitismo
+    else:
+        elite(pop, best_old)
     valor_x = xreal(pop,UB,LB)
     fx, fit = fitness(valor_x)
     plt.plot(x,f(x), '--')
@@ -112,4 +134,4 @@ for i in range(NGEN):
     pop = filhos.copy()
     plt.pause(0.5)
 plt.ioff()
-print(FindBest(pop))
+print(findBest(pop))
