@@ -63,8 +63,8 @@ def roullete(fit):
     selecionados = []
     for _ in range(len(fit)):
         aleatorio = rd.random()
-        for index, elemento in enumerate(soma_cumulativa):
-            if aleatorio <= elemento:
+        for index, elemento in enumerate(soma_cumulativa): # Esse for percorre todos os itens ta soma_cumulativa, que esta em forma crescente
+            if aleatorio <= elemento: # Como a lista esta na forma crescente, se aleatorio <= o elemento, ele obrigatoriamente caiu na sua região na roleta
                 selecionados.append(index)
                 break
     return selecionados # Aqui ele retorna o index do vetor B selecionado
