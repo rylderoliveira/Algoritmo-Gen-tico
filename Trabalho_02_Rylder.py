@@ -7,9 +7,9 @@ from sklearn.utils import shuffle
 # LB ou UB tem a seguinte forma LB = [x,y]
 LB = [-1,-1]
 UB = [1,1]
-NPOP = 4 # 60
-NBITS = 10 # 36
-NGEN = 4 # 40
+NPOP = 60 # 60
+NBITS = 36 # 36
+NGEN = 40 # 40
 EP = 0.001
 MUT = 0.25
 
@@ -36,8 +36,8 @@ def create(npop, nbits):
         pop.append(bits)
     return pop
 
-def nota(selecionados):
-    fz, h, g = fxy(selecionados)
+def nota(pop):
+    fz, h, g = fxy(pop)
     factiveis = []
     notas = []
     
@@ -92,9 +92,8 @@ def real(bit, ub, lb):
         r = lb + z * d
         x_real.append(r)
     return x_real
-            
-def fxy(pop):
-    # Separação dos bits X e Y para conversão para real
+
+def eixosReais(pop):
     bit_x = []
     bit_y = []
     for bit in pop:
@@ -104,6 +103,11 @@ def fxy(pop):
     # Convertendo os bits X e Y em numeros reais
     xreal = real(bit_x,UB[0], LB[0])
     yreal = real(bit_y,UB[1], LB[1])
+    return xreal, yreal
+
+def fxy(pop):
+    # Separação dos bits X e Y para conversão para real
+    xreal, yreal = eixosReais(pop)
 
     # Resultado em Z da função objetivo
     resultadoz = [f(xreal[i],yreal[i]) for i in range(len(xreal))]
@@ -116,8 +120,8 @@ def fxy(pop):
 def torneio(pop):
     temp_pop = pop.copy()
     temp_pop = shuffle(temp_pop)
-    fz_pop, _, _ = fxy(pop)
-    fz_temp, _, _ = fxy(temp_pop)
+    fz_pop = nota(pop)
+    fz_temp = nota(temp_pop)
     new_pop = []
     for i in range(len(pop)):
         if fz_pop[i] <= fz_temp[i]: 
@@ -128,8 +132,8 @@ def torneio(pop):
 
 
 # Essa função faz o cruzamento entre os individuos e cria uma nova população
-def crossover(selecionados, pop):
-    bits_selecionados = [pop[i] for i in selecionados] # Pegando o bits selecionados anteriormente
+def crossover(selecionados):
+    bits_selecionados = selecionados # Pegando o bits selecionados anteriormente
     mates = np.random.permutation(len(bits_selecionados)) # Achando os pares a serem cruzados
     new_pop = []
     # Esse primeiro for escolhe os pais para cruzamento
@@ -148,11 +152,22 @@ def crossover(selecionados, pop):
 
 # Começo do SGA
 pop = create(NPOP, NBITS)
-print(pop)
-print(fxy(pop))
-selecionados = torneio(pop)
-print(selecionados)
-print(nota(selecionados))
+plt.ion()
+ax = np.linspace(LB[0],UB[0])
+ay = np.linspace(LB[1],UB[1])
+x, y = np.meshgrid(ax,ay)
+z = f(x,y)
+for i in range(NGEN):
+    plt.clf()
+    fx, fy = eixosReais(pop)
+    fz,_,_ = fxy(pop)
+    plt.contour(x,y,z)
+    plt.plot(fx,fy, '+', color='red')
+    selecionados = torneio(pop)
+    filhos = crossover(selecionados)
+    pop = filhos.copy()
+    plt.pause(0.5)
+plt.ioff()
 # ax = np.linspace(LB[0],UB[0])
 # ay = np.linspace(LB[1],UB[1])
 # x, y = np.meshgrid(ax,ay)
