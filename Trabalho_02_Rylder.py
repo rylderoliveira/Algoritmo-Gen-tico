@@ -168,12 +168,3 @@ for i in range(NGEN):
     pop = filhos.copy()
     plt.pause(0.5)
 plt.ioff()
-# ax = np.linspace(LB[0],UB[0])
-# ay = np.linspace(LB[1],UB[1])
-# x, y = np.meshgrid(ax,ay)
-# z = f(x,y)
-# plt.contourf(x,y,z)
-# plt.show()
-# for i in range(NGEN):
-    # selecionados = torneio(pop)
-    # ajustados = nota(selecionados)
