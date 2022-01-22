@@ -1,21 +1,24 @@
 import numpy as np
 import random as rd
 import matplotlib.pyplot as plt
+from sklearn.utils import shuffle
 
 # Declaração das constantes
-UB = 3
-LB = -2
-NPOP = 10
-NBITS = 8
-NGEN = 12
-EP = 0.1
+# LB ou UB tem a seguinte forma LB = [x,y]
+LB = [-1,-1]
+UB = [1,1]
+NPOP = 4 # 60
+NBITS = 10 # 36
+NGEN = 4 # 40
+EP = 0.001
+MUT = 0.25
 
 # Funções que o usuario escolhe
-h = 0
-g = 0
+def hFunc(x, y): return 8*x**2+4*y**2-1
+def gFunc(x, y): return -x, -y-0.5
 
 # Função a ser minimizada
-def f(x): return np.sin(x**2) * np.cos(x) + np.exp(-0.1*x) + np.exp(0.22*x)
+def f(x,y): return x*y
 
 # Cria a primeira população
 def create(npop, nbits):
@@ -33,10 +36,51 @@ def create(npop, nbits):
         pop.append(bits)
     return pop
 
-# Transforma o vetor de bits em real
-def xreal(pop, ub, lb):
+def nota(selecionados):
+    fz, h, g = fxy(selecionados)
+    factiveis = []
+    notas = []
+    
+    # Verifica se e factivel
+    for _ in range(len(fz)):
+        if all([abs(x) < EP for x in h]) and all([x <= 0 for x in g]):
+            factiveis.append(True)
+        else:
+            factiveis.append(False)
+
+    # Maior fz entre os factíveis
+    mfz = 0
+    if any(factiveis):
+        todos_fz_fac = [fz[i] for i in range(len(fz)) if factiveis[i]]
+        mfz = max(todos_fz_fac)
+
+
+    # Penalidades
+    for i, j in enumerate(factiveis):
+        # Adiciona os factiveis
+        if j:
+            notas.append(fz)
+
+        # Adiciona os infactiveis ajustados 
+        elif j == False and mfz != 0:
+            valor = g[i]
+            g1 = valor[0]
+            g2 = valor[1]
+            notas.append(mfz+abs(h[i])+abs(g[i[0]])+abs(g[i[1]]))
+
+        # Adiciona apenas os infactiveis
+        else:
+            valor = g[i]
+            g1 = valor[0]
+            g2 = valor[1]
+            notas.append(abs(h[i])+abs(g1)+abs(g2))
+    
+    return notas
+    
+
+def real(bit, ub, lb):
     x_real = []
-    for bits in pop:
+    for bits in bit:
         z = 0
         d = (ub - lb)/(2**len(bits)-1)
         #bits.reverse()
@@ -48,44 +92,35 @@ def xreal(pop, ub, lb):
         r = lb + z * d
         x_real.append(r)
     return x_real
+            
+def fxy(pop):
+    # Separação dos bits X e Y para conversão para real
+    bit_x = []
+    bit_y = []
+    for bit in pop:
+        bit_x.append(bit[:NBITS//2])
+        bit_y.append(bit[NBITS//2:])
 
-# Retorna a nota de cada um dos valores
-def fitness(x_real):
-    fx = [f(i) for i in x_real] # Retorna os pontos de x em fx
-    temp_fx = fx.copy() # Criando lista temporario para calculo das notas
-    ordenada = sorted(temp_fx, reverse=True) # Ordena os valores para escolha da nota
-    fit = []
-    for _, valor in enumerate(fx):
-        index = ordenada.index(valor)
-        fit.append(index+1) # Cria um lista com as notas de fx
-        ordenada[index] = None # Essa linha foi necessaria para que não houvesse notas repetidas em caso de valor de fx iguais
-    return fx, fit
+    # Convertendo os bits X e Y em numeros reais
+    xreal = real(bit_x,UB[0], LB[0])
+    yreal = real(bit_y,UB[1], LB[1])
 
-# Aplica o metodo de seleção por roleta
-def roullete(fit):
-    total = sum(fit)
-    soma_cumulativa = np.cumsum(fit)/total # Calcula a area de cada valor na roleta
-    selecionados = []
-    for _ in range(len(fit)):
-        aleatorio = rd.random()
-        for index, elemento in enumerate(soma_cumulativa): # Esse for percorre todos os itens ta soma_cumulativa, que esta em forma crescente
-            if aleatorio <= elemento: # Como a lista esta na forma crescente, se aleatorio <= o elemento, ele obrigatoriamente caiu na sua região na roleta
-                selecionados.append(index)
-                break
-    return selecionados # Aqui ele retorna o index do vetor B selecionado
-
-def nota(pop):
-    pass
+    # Resultado em Z da função objetivo
+    resultadoz = [f(xreal[i],yreal[i]) for i in range(len(xreal))]
+    resultadoh = [hFunc(xreal[i], yreal[i]) for i in range(len(xreal))]
+    resultadog = [gFunc(xreal[i], yreal[i]) for i in range(len(xreal))]
+    
+    return resultadoz, resultadoh, resultadog
 
 # Aplica o metodo de seleção por torneio
 def torneio(pop):
     temp_pop = pop.copy()
-    temp_pop = rd.shuffle(temp_pop)
-    fx_pop, _ = fitness(pop)
-    fx_temp, _ = fitness(temp_pop)
+    temp_pop = shuffle(temp_pop)
+    fz_pop, _, _ = fxy(pop)
+    fz_temp, _, _ = fxy(temp_pop)
     new_pop = []
     for i in range(len(pop)):
-        if fx_pop[i] <= fx_temp[i]: 
+        if fz_pop[i] <= fz_temp[i]: 
             new_pop.append(pop[i])
         else:
             new_pop.append(temp_pop[i])
@@ -111,50 +146,19 @@ def crossover(selecionados, pop):
 
     return new_pop
 
-# Encontra o melhor local
-def findBest(pop):
-    x = xreal(pop,UB,LB)
-    fx, _ = fitness(x)
-    fx_best = min(fx)
-    index = fx.index(fx_best)
-    x_best = x[index]
-    return x_best, fx_best
-
-# Faz o elitismo
-def elite(pop, best_old):
-    x = xreal(pop,UB,LB)
-    fx, _ = fitness(x)
-    best = min(fx)
-    index = fx.index(best)
-    bit_best = pop[index]
-    if best_old < best:
-        sub = rd.randint(0,len(fx)-1)
-        pop[sub] = bit_best # Coloca o melhor individuo em algum lugar aleatorio da população
-    else:
-        best_old = best
-    return pop
-
 # Começo do SGA
 pop = create(NPOP, NBITS)
-plt.ion()
-x = np.linspace(LB,UB)
-for i in range(NGEN):
-    plt.clf()
-    # Encontra o melhor local na primeira geração para comparar com as proximas
-    if i == 0:
-        tempx = xreal(pop,UB,LB)
-        fx, _ = fitness(tempx)
-        best_old = min(fx)
-    # Faz o elitismo
-    else:
-        elite(pop, best_old)
-    valor_x = xreal(pop,UB,LB)
-    fx, fit = fitness(valor_x)
-    plt.plot(x,f(x), '--')
-    plt.plot(valor_x, fx, '+')
-    selecionados = roullete(fit)
-    filhos = crossover(selecionados, pop)
-    pop = filhos.copy()
-    plt.pause(0.5)
-plt.ioff()
-print(findBest(pop))
+print(pop)
+print(fxy(pop))
+selecionados = torneio(pop)
+print(selecionados)
+print(nota(selecionados))
+# ax = np.linspace(LB[0],UB[0])
+# ay = np.linspace(LB[1],UB[1])
+# x, y = np.meshgrid(ax,ay)
+# z = f(x,y)
+# plt.contourf(x,y,z)
+# plt.show()
+# for i in range(NGEN):
+    # selecionados = torneio(pop)
+    # ajustados = nota(selecionados)
