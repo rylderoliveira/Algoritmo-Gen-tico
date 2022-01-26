@@ -8,9 +8,9 @@ from sklearn.utils import shuffle
 LB = [-1,-1]
 UB = [1,1]
 NPOP = 60 # 60
-NBITS = 36 # 36
+NBITS = 14 # 36
 NGEN = 40 # 40
-EP = 0.001
+EP = 0.1
 MUT = 0.25
 
 # Funções que o usuario escolhe
@@ -42,11 +42,12 @@ def nota(pop):
     notas = []
     
     # Verifica se e factivel
-    for _ in range(len(fz)):
-        if all([abs(x) < EP for x in h]) and all([x <= 0 for x in g]):
+    for ind in range(len(fz)):
+        if abs(h[ind]) < EP and g[ind][0] <= 0 and g[ind][1] <= 0:
             factiveis.append(True)
         else:
             factiveis.append(False)
+    print(factiveis)
 
     # Maior fz entre os factíveis
     mfz = 0
@@ -59,21 +60,15 @@ def nota(pop):
     for i, j in enumerate(factiveis):
         # Adiciona os factiveis
         if j:
-            notas.append(fz)
+            notas.append(fz[i])
 
         # Adiciona os infactiveis ajustados 
         elif j == False and mfz != 0:
-            valor = g[i]
-            g1 = valor[0]
-            g2 = valor[1]
-            notas.append(mfz+abs(h[i])+abs(g[i[0]])+abs(g[i[1]]))
+            notas.append(mfz+abs(h[i])+abs(g[i][0])+abs(g[i][1]))
 
         # Adiciona apenas os infactiveis
         else:
-            valor = g[i]
-            g1 = valor[0]
-            g2 = valor[1]
-            notas.append(abs(h[i])+abs(g1)+abs(g2))
+            notas.append(abs(h[i])+abs(g[i][0])+abs(g[i][0]))
     
     return notas
     
